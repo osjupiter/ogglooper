@@ -1,0 +1,12 @@
+{
+  "songs":[
+    {
+      "name":"オープニング",
+      "repeatStart":110,
+      "repeatEnd":340
+    }
+
+  ]
+
+
+}
