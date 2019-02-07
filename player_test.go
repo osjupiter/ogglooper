@@ -1,10 +1,10 @@
 package main
 
 import (
-	"testing"
-	"strings"
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
+	"strings"
+	"testing"
 )
 
 func TestNewPlayer(t *testing.T) {

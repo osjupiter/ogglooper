@@ -1,24 +1,24 @@
 package main
 
 import (
-	"os"
-	"github.com/faiface/beep/speaker"
-	"time"
-	"github.com/faiface/beep/vorbis"
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/effects"
+	"github.com/faiface/beep/speaker"
+	"github.com/faiface/beep/vorbis"
+	"os"
+	"time"
 )
 
 type Player struct {
-	context *PlayContext
-	list    SongList
+	context   *PlayContext
+	list      SongList
 	volMaster *effects.Volume
 }
 
 func NewPlayer() *Player {
 	return &Player{
-		context: &PlayContext{},
-		volMaster:&effects.Volume{Base:10,Volume:1},
+		context:   &PlayContext{},
+		volMaster: &effects.Volume{Base: 10, Volume: 1},
 	}
 }
 
@@ -37,12 +37,11 @@ func (p *Player) Start() {
 	// import "github.com/faiface/beep/speaker"
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
 
-	go p.loop(s,l)
+	go p.loop(s, l)
 }
 
-
-func (p *Player) loop(s beep.StreamSeekCloser,l beep.StreamSeekCloser) {
-	p.volMaster.Streamer=beep.Seq(s, beep.Loop(-1,l))
+func (p *Player) loop(s beep.StreamSeekCloser, l beep.StreamSeekCloser) {
+	p.volMaster.Streamer = beep.Seq(s, beep.Loop(-1, l))
 	s.Seek(0)
 	speaker.Play(p.volMaster)
 }
@@ -50,6 +49,7 @@ func (p *Player) Suspend() {
 	speaker.Lock()
 
 }
+
 /*
 func (p *Player) SkipToNext() {
 
@@ -62,7 +62,7 @@ func (p *Player) PassToNext() {
 }
 */
 func (p *Player) SetVol(v int) {
-	p.volMaster.Volume= 1.0*(float64(v)/100.0)-1
+	p.volMaster.Volume = 1.0*(float64(v)/100.0) - 1
 
 }
 func (p *Player) SelectSong() {

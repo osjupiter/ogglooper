@@ -2,22 +2,20 @@ package main
 
 import (
 	"github.com/lxn/walk"
-		. "github.com/lxn/walk/declarative"
-				)
-
+	. "github.com/lxn/walk/declarative"
+)
 
 func main() {
 
+	player := NewPlayer()
 
-	player:=NewPlayer()
-
-	var model walk.ListModel=&EnvModel{
-						items:[]EnvItem{
-							{name: "1", value: "b"},
-							{name: "2", value: "b"},
-							{name: "3", value: "b"},
-						},
-				}
+	var model walk.ListModel = &EnvModel{
+		items: []EnvItem{
+			{name: "1", value: "b"},
+			{name: "2", value: "b"},
+			{name: "3", value: "b"},
+		},
+	}
 
 	var slv *walk.Slider
 	// ドロップダウン
@@ -30,7 +28,7 @@ func main() {
 	// 再生位置
 	// 閉じるボタン（フェードアウト？
 	// 最小化
-	_,e:=MainWindow{
+	_, e := MainWindow{
 		Title:   "OGG Repeat",
 		MinSize: Size{600, 400},
 		Layout:  VBox{},
@@ -54,8 +52,8 @@ func main() {
 				},
 			},
 			Slider{
-				AssignTo:&slv,
-				Value:100,
+				AssignTo: &slv,
+				Value:    100,
 				OnValueChanged: func() {
 					player.SetVol(slv.Value())
 
@@ -63,11 +61,12 @@ func main() {
 			},
 		},
 	}.Run()
-	if e!=nil {
+	if e != nil {
 		panic(e)
 	}
 
 }
+
 type EnvItem struct {
 	name  string
 	value string
