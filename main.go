@@ -1,59 +1,87 @@
 package main
 
 import (
-	"os"
-	"github.com/faiface/beep/vorbis"
-	"github.com/faiface/beep/speaker"
-	"time"
-)
+	"github.com/lxn/walk"
+		. "github.com/lxn/walk/declarative"
+				)
+
 
 func main() {
 
-	f, _ := os.Open("test.ogg")
-	s, format, _ := vorbis.Decode(f)
-	// import "github.com/faiface/beep/speaker"
-	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
-	speaker.Play(s)
-	select {} // for now
+
+	player:=NewPlayer()
+
+	var model walk.ListModel=&EnvModel{
+						items:[]EnvItem{
+							{name: "1", value: "b"},
+							{name: "2", value: "b"},
+							{name: "3", value: "b"},
+						},
+				}
+
+	var slv *walk.Slider
+	// ドロップダウン
+	// 再生停止
+	// 一時停止
+	// ループする
+	// 音量
+
+	// Opt 一時間
+	// 再生位置
+	// 閉じるボタン（フェードアウト？
+	// 最小化
+	_,e:=MainWindow{
+		Title:   "OGG Repeat",
+		MinSize: Size{600, 400},
+		Layout:  VBox{},
+		Children: []Widget{
+			ComboBox{
+				Value:         Bind("SpeciesId", SelRequired{}),
+				BindingMember: "Id",
+				DisplayMember: "Name",
+				Model:         model,
+			},
+			PushButton{
+				Text: "Start",
+				OnClicked: func() {
+					player.Start()
+				},
+			},
+			PushButton{
+				Text: "Stop",
+				OnClicked: func() {
+					player.Suspend()
+				},
+			},
+			Slider{
+				AssignTo:&slv,
+				Value:100,
+				OnValueChanged: func() {
+					player.SetVol(slv.Value())
+
+				},
+			},
+		},
+	}.Run()
+	if e!=nil {
+		panic(e)
+	}
 
 }
+type EnvItem struct {
+	name  string
+	value string
+}
 
-/*
+type EnvModel struct {
+	walk.ListModelBase
+	items []EnvItem
+}
 
-	bu:=bytes.NewBuffer(b)
+func (m *EnvModel) ItemCount() int {
+	return len(m.items)
+}
 
-
-
-	r, err := oggvorbis.NewReader(bu)
-	if(err!=nil){
-		panic(err)
-	}
-	// handle error
-
-	fmt.Println(r.SampleRate())
-	fmt.Println(r.Channels())
-
-	p, err := oto.NewPlayer(44100, 2, 2, 4096)
-
-	buffer := make([]float32, 8192)
-	for {
-		n, err := r.Read(buffer)
-
-		// use buffer[:n]
-		fmt.Println(n)
-		fmt.Println(buffer)
-		p.Write(buffer)
-
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			// handle error
-		}
-	}
-	if err := p.Close(); err != nil {
-		panic("")
-	}
-
-
-*/
+func (m *EnvModel) Value(index int) interface{} {
+	return m.items[index].name
+}

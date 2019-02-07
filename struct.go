@@ -8,6 +8,11 @@ type Config struct {
 	defaultLoopTime int
 }
 type SongList []*Song
+const (
+	NONE State =0
+	PLAYING State =iota
+	SUSPENDED State =iota
+)
 
 type Song struct {
 	title       string
@@ -21,7 +26,10 @@ type SongData bytes.Buffer
 type PlaySetting struct{
 	loopTime int
 }
+type State int
+
 type PlayContext struct{
+	state State
 	playing *Song
 	pos int64
 	volume int

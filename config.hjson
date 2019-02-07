@@ -2,6 +2,11 @@
   "songs":[
     {
       "name":"オープニング",
+      "introFile":"",
+      "loopFile":""
+    },{
+      "name":"オープニング",
+      "file":"",
       "repeatStart":110,
       "repeatEnd":340
     }
