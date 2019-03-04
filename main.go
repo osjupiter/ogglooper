@@ -1,23 +1,54 @@
 package main
 
 import (
+	"encoding/json"
+	"github.com/hjson/hjson-go"
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
+	"io/ioutil"
 )
 
+func load(file string) *Config {
+	b, e := ioutil.ReadFile(file)
+	if e != nil {
+		panic(e)
+	}
+	c := Config{}
+	var dat map[string]interface{}
+	e = hjson.Unmarshal(b, &dat)
+	if e != nil {
+		panic(e)
+	}
+	// convert to JSON
+	jj, _ := json.Marshal(dat)
+	// unmarshal
+	json.Unmarshal(jj, &c)
+
+	return &c
+
+}
+
 func main() {
+	conf := load("config.hjson")
 
-	player := NewPlayer()
+	player := NewPlayer(conf)
 
-	var model walk.ListModel = &EnvModel{
-		items: []EnvItem{
-			{name: "1", value: "b"},
-			{name: "2", value: "b"},
-			{name: "3", value: "b"},
-		},
+	var model walk.ListModel = &SongListItems{
+		songList: player.config.Songs,
 	}
 
-	var slv *walk.Slider
+	var volumeSlide *walk.Slider
+	var songName *walk.Label
+	var playingSlide *walk.Slider
+	var nowPlaying *walk.Label
+	var combo *walk.ComboBox
+
+	player.secondHandler = func(i int) {
+		playingSlide.SetValue(i)
+		songName.SetText(player.config.Songs[0].File)
+
+	}
+
 	// ドロップダウン
 	// 再生停止
 	// 一時停止
@@ -33,7 +64,19 @@ func main() {
 		MinSize: Size{600, 400},
 		Layout:  VBox{},
 		Children: []Widget{
+			Slider{
+				AssignTo: &playingSlide,
+			},
+			Label{
+				AssignTo: &songName,
+				Text:     "なにか",
+			},
+			Label{
+				AssignTo: &nowPlaying,
+				Text:     "00:05:00 / 00:00:15",
+			},
 			ComboBox{
+				AssignTo:      &combo,
 				Value:         Bind("SpeciesId", SelRequired{}),
 				BindingMember: "Id",
 				DisplayMember: "Name",
@@ -42,7 +85,8 @@ func main() {
 			PushButton{
 				Text: "Start",
 				OnClicked: func() {
-					player.Start()
+					id := combo.CurrentIndex()
+					player.Start(id)
 				},
 			},
 			PushButton{
@@ -52,10 +96,13 @@ func main() {
 				},
 			},
 			Slider{
-				AssignTo: &slv,
+				AssignTo: &volumeSlide,
 				Value:    100,
+				MaxValue: 100,
+				MinValue: 0,
+				Tracking: true,
 				OnValueChanged: func() {
-					player.SetVol(slv.Value())
+					player.SetVol(volumeSlide.Value())
 
 				},
 			},

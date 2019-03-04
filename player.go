@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/speaker"
@@ -10,63 +11,86 @@ import (
 )
 
 type Player struct {
-	context   *PlayContext
-	list      SongList
-	volMaster *effects.Volume
+	context       *PlayContext
+	volMaster     *effects.Volume
+	config        *Config
+	playing       bool
+	main          beep.StreamSeekCloser
+	intro         beep.StreamSeekCloser
+	secondHandler func(int)
 }
 
-func NewPlayer() *Player {
-	return &Player{
+func NewPlayer(config *Config) *Player {
+	p := &Player{
 		context:   &PlayContext{},
 		volMaster: &effects.Volume{Base: 10, Volume: 1},
 	}
+	p.config = config
+	return p
 }
 
-func (p *Player) load(list SongList) {
-	p.list = list
-	// なんか初期化
-
-}
-func (p *Player) Start() {
-
-	f, _ := os.Open("1.ogg")
-	s, format, _ := vorbis.Decode(f)
-
-	f2, _ := os.Open("2.ogg")
-	l, format, _ := vorbis.Decode(f2)
-	// import "github.com/faiface/beep/speaker"
+func (p *Player) Start(id int) {
+	if id == -1 {
+		return
+	}
+	main, intro, format := p.stream(id)
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+	stream := beep.Loop(-1, main)
+	if intro != nil {
+		stream = beep.Seq(intro, stream)
+	}
+	p.main = main
+	p.intro = intro
+	go p.play(stream, format)
+}
+func (p *Player) stream(id int) (beep.StreamSeekCloser, beep.StreamSeekCloser, beep.Format) {
+	songConf := p.config.Songs[id]
+	var main beep.StreamSeekCloser = nil
+	var mainFormat beep.Format
+	var intro beep.StreamSeekCloser = nil
+	var introFormat beep.Format
 
-	go p.loop(s, l)
+	if songConf.File != "" {
+		f2, _ := os.Open(songConf.File)
+		main, mainFormat, _ = vorbis.Decode(f2)
+	}
+	if songConf.IntroFile != "" {
+		f, _ := os.Open(songConf.IntroFile)
+		intro, introFormat, _ = vorbis.Decode(f)
+	}
+	if songConf.IntroFile != "" && mainFormat != introFormat {
+		panic("err formats")
+	}
+	return main, intro, mainFormat
 }
 
-func (p *Player) loop(s beep.StreamSeekCloser, l beep.StreamSeekCloser) {
-	p.volMaster.Streamer = beep.Seq(s, beep.Loop(-1, l))
-	s.Seek(0)
+func (p *Player) play(s beep.Streamer, format beep.Format) {
+	p.volMaster.Streamer = s
 	speaker.Play(p.volMaster)
+	p.playing = true
+	go func(playing *bool) {
+		for *playing {
+			select {
+			case <-time.After(time.Second):
+				speaker.Lock()
+				now := format.SampleRate.D(p.main.Position() + p.intro.Position()).Round(time.Second)
+				max := format.SampleRate.D(p.main.Len() + p.intro.Len()).Round(time.Second)
+				percent := int(now.Seconds() / (max.Seconds()) * 100)
+				p.secondHandler(percent)
+				fmt.Println(now)
+				fmt.Println(percent)
+				speaker.Unlock()
+			}
+		}
+	}(&p.playing)
 }
 func (p *Player) Suspend() {
-	speaker.Lock()
-
+	speaker.Clear()
+	p.playing = false
 }
 
-/*
-func (p *Player) SkipToNext() {
-
-}
-func (p *Player) BackToHead() {
-
-}
-func (p *Player) PassToNext() {
-
-}
-*/
 func (p *Player) SetVol(v int) {
-	p.volMaster.Volume = 1.0*(float64(v)/100.0) - 1
-
-}
-func (p *Player) SelectSong() {
-
+	p.volMaster.Volume = 3.5*(float64(v)/100.0) - 3.5
 }
 
 /*

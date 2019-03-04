@@ -1,13 +1,30 @@
 package main
 
-import "bytes"
+import (
+	"bytes"
+	"fmt"
+	"github.com/lxn/walk"
+)
 
 // static
 type Config struct {
-	songs           SongList
-	defaultLoopTime int
+	Songs           SongList
+	DefaultLoopTime int
 }
 type SongList []*Song
+
+type SongListItems struct {
+	songList SongList
+	walk.ListModelBase
+}
+
+func (s *SongListItems) ItemCount() int {
+	return len(s.songList)
+}
+
+func (s *SongListItems) Value(index int) interface{} {
+	return s.songList[index].Name
+}
 
 const (
 	NONE      State = 0
@@ -16,11 +33,16 @@ const (
 )
 
 type Song struct {
-	title       string
-	RepeatStart int64
-	RepeatEnd   int64
-	data        SongData
+	Name      string
+	File      string
+	IntroFile string
+	Data      SongData
 }
+
+func (s *Song) String() string {
+	return fmt.Sprintf("{%s %s %s}", s.Name, s.File, s.IntroFile)
+}
+
 type SongData bytes.Buffer
 
 // dynamic
