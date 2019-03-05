@@ -40,20 +40,16 @@ func main() {
 
 	var volumeSlide *walk.Slider
 	var songName *walk.Label
-	var playingSlide *walk.Slider
 	var nowPlaying *walk.Label
 	var combo *walk.ComboBox
 
-	player.secondHandler = func(now float64,all float64) {
-		percent := now / (all) * 100
-		playingSlide.SetValue(int(percent))
-		songName.SetText(player.config.Songs[0].File)
-
-		n:=int(now)
-		m:=int(all)
-		nowM,nowS:=n/60,n%60
-		maxM,maxS:=m/60,m%60
-		nowPlaying.SetText(fmt.Sprintf("%02d:%02d / %02d:%02d ",nowM,nowS ,maxM,maxS))
+	player.secondHandler = func(now float64, all float64) {
+		songName.SetText(player.config.Songs[0].Name)
+		n := int(now)
+		m := int(all)
+		nowM, nowS := n/60, n%60
+		maxM, maxS := m/60, m%60
+		nowPlaying.SetText(fmt.Sprintf("%02d:%02d / %02d:%02d ", nowM, nowS, maxM, maxS))
 	}
 
 	// ドロップダウン
@@ -68,20 +64,9 @@ func main() {
 	// 最小化
 	_, e := MainWindow{
 		Title:   "OGG Repeat",
-		MinSize: Size{600, 400},
+		Size:Size{400,100},
 		Layout:  VBox{},
 		Children: []Widget{
-			Slider{
-				AssignTo: &playingSlide,
-			},
-			Label{
-				AssignTo: &songName,
-				Text:     "なにか",
-			},
-			Label{
-				AssignTo: &nowPlaying,
-				Text:     "00:00 / 00:00",
-			},
 			ComboBox{
 				AssignTo:      &combo,
 				Value:         Bind("SpeciesId", SelRequired{}),
@@ -89,28 +74,49 @@ func main() {
 				DisplayMember: "Name",
 				Model:         model,
 			},
-			PushButton{
-				Text: "Start",
-				OnClicked: func() {
-					id := combo.CurrentIndex()
-					player.Start(id)
+			Composite{
+				Layout: VBox{},
+				Alignment:AlignHCenterVCenter,
+				Children: []Widget{
+					Label{
+						AssignTo: &songName,
+						Text:     "なにか",
+						Alignment:AlignHCenterVCenter,
+					},
+					Label{
+						AssignTo: &nowPlaying,
+						Text:     "00:00 / 00:00",
+						Alignment:AlignHCenterVCenter,
+					},
 				},
 			},
-			PushButton{
-				Text: "Stop",
-				OnClicked: func() {
-					player.Suspend()
-				},
-			},
-			Slider{
-				AssignTo: &volumeSlide,
-				Value:    100,
-				MaxValue: 100,
-				MinValue: 0,
-				Tracking: true,
-				OnValueChanged: func() {
-					player.SetVol(volumeSlide.Value())
+			Composite{
+				Layout: Flow{},
+				Children: []Widget{
+					PushButton{
+						Text: "Start",
+						OnClicked: func() {
+							id := combo.CurrentIndex()
+							player.Start(id)
+						},
+					},
+					PushButton{
+						Text: "Stop",
+						OnClicked: func() {
+							player.Suspend()
+						},
+					},
+					Slider{
+						AssignTo: &volumeSlide,
+						Value:    100,
+						MaxValue: 100,
+						MinValue: 0,
+						Tracking: true,
+						OnValueChanged: func() {
+							player.SetVol(volumeSlide.Value())
 
+						},
+					},
 				},
 			},
 		},
@@ -121,20 +127,3 @@ func main() {
 
 }
 
-type EnvItem struct {
-	name  string
-	value string
-}
-
-type EnvModel struct {
-	walk.ListModelBase
-	items []EnvItem
-}
-
-func (m *EnvModel) ItemCount() int {
-	return len(m.items)
-}
-
-func (m *EnvModel) Value(index int) interface{} {
-	return m.items[index].name
-}

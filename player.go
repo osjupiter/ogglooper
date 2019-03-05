@@ -17,7 +17,7 @@ type Player struct {
 	playing       bool
 	main          beep.StreamSeekCloser
 	intro         beep.StreamSeekCloser
-	secondHandler func(float64,float64)
+	secondHandler func(float64, float64)
 }
 
 func NewPlayer(config *Config) *Player {
@@ -67,6 +67,7 @@ func (p *Player) stream(id int) (beep.StreamSeekCloser, beep.StreamSeekCloser, b
 func (p *Player) play(s beep.Streamer, format beep.Format) {
 	p.volMaster.Streamer = s
 	speaker.Play(p.volMaster)
+	p.secondHandler(0,0)
 	p.playing = true
 	go func(playing *bool) {
 		for *playing {
