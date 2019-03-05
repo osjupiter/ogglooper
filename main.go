@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/hjson/hjson-go"
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
@@ -43,10 +44,16 @@ func main() {
 	var nowPlaying *walk.Label
 	var combo *walk.ComboBox
 
-	player.secondHandler = func(i int) {
-		playingSlide.SetValue(i)
+	player.secondHandler = func(now float64,all float64) {
+		percent := now / (all) * 100
+		playingSlide.SetValue(int(percent))
 		songName.SetText(player.config.Songs[0].File)
 
+		n:=int(now)
+		m:=int(all)
+		nowM,nowS:=n/60,n%60
+		maxM,maxS:=m/60,m%60
+		nowPlaying.SetText(fmt.Sprintf("%02d:%02d / %02d:%02d ",nowM,nowS ,maxM,maxS))
 	}
 
 	// ドロップダウン
@@ -73,7 +80,7 @@ func main() {
 			},
 			Label{
 				AssignTo: &nowPlaying,
-				Text:     "00:05:00 / 00:00:15",
+				Text:     "00:00 / 00:00",
 			},
 			ComboBox{
 				AssignTo:      &combo,

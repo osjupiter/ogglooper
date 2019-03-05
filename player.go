@@ -17,7 +17,7 @@ type Player struct {
 	playing       bool
 	main          beep.StreamSeekCloser
 	intro         beep.StreamSeekCloser
-	secondHandler func(int)
+	secondHandler func(float64,float64)
 }
 
 func NewPlayer(config *Config) *Player {
@@ -72,14 +72,13 @@ func (p *Player) play(s beep.Streamer, format beep.Format) {
 		for *playing {
 			select {
 			case <-time.After(time.Second):
-				speaker.Lock()
+				//speaker.Lock()
 				now := format.SampleRate.D(p.main.Position() + p.intro.Position()).Round(time.Second)
 				max := format.SampleRate.D(p.main.Len() + p.intro.Len()).Round(time.Second)
-				percent := int(now.Seconds() / (max.Seconds()) * 100)
-				p.secondHandler(percent)
+
+				p.secondHandler(now.Seconds(), max.Seconds())
 				fmt.Println(now)
-				fmt.Println(percent)
-				speaker.Unlock()
+				//speaker.Unlock()
 			}
 		}
 	}(&p.playing)
