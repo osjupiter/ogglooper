@@ -43,7 +43,7 @@ func main() {
 	var nowPlaying *walk.Label
 	var combo *walk.ComboBox
 
-	player.secondHandler = func(now float64, all float64) {
+	player.callback = func(now float64, all float64) {
 		songName.SetText(player.config.Songs[0].Name)
 		n := int(now)
 		m := int(all)
@@ -52,20 +52,10 @@ func main() {
 		nowPlaying.SetText(fmt.Sprintf("%02d:%02d / %02d:%02d ", nowM, nowS, maxM, maxS))
 	}
 
-	// ドロップダウン
-	// 再生停止
-	// 一時停止
-	// ループする
-	// 音量
-
-	// Opt 一時間
-	// 再生位置
-	// 閉じるボタン（フェードアウト？
-	// 最小化
 	_, e := MainWindow{
-		Title:   "OGG Repeat",
-		Size:Size{400,100},
-		Layout:  VBox{},
+		Title:  "OGG Repeat",
+		Size:   Size{Width: 400, Height: 100},
+		Layout: VBox{},
 		Children: []Widget{
 			ComboBox{
 				AssignTo:      &combo,
@@ -75,18 +65,18 @@ func main() {
 				Model:         model,
 			},
 			Composite{
-				Layout: VBox{},
-				Alignment:AlignHCenterVCenter,
+				Layout:    VBox{},
+				Alignment: AlignHCenterVCenter,
 				Children: []Widget{
 					Label{
-						AssignTo: &songName,
-						Text:     "なにか",
-						Alignment:AlignHCenterVCenter,
+						AssignTo:  &songName,
+						Text:      " - ",
+						Alignment: AlignHCenterVCenter,
 					},
 					Label{
-						AssignTo: &nowPlaying,
-						Text:     "00:00 / 00:00",
-						Alignment:AlignHCenterVCenter,
+						AssignTo:  &nowPlaying,
+						Text:      "00:00 / 00:00",
+						Alignment: AlignHCenterVCenter,
 					},
 				},
 			},
@@ -126,4 +116,3 @@ func main() {
 	}
 
 }
-

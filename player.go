@@ -5,25 +5,19 @@ import (
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/speaker"
-	"github.com/faiface/beep/vorbis"
-	"os"
 	"time"
 )
 
 type Player struct {
-	context       *PlayContext
-	volMaster     *effects.Volume
-	config        *Config
-	playing       bool
-	main          beep.StreamSeekCloser
-	intro         beep.StreamSeekCloser
-	secondHandler func(float64, float64)
+	volMaster *effects.Volume
+	config    *Config
+	callback  func(float64, float64)
+	now       beep.StreamCloser
 }
 
 func NewPlayer(config *Config) *Player {
 	p := &Player{
-		context:   &PlayContext{},
-		volMaster: &effects.Volume{Base: 10, Volume: 1},
+		volMaster: &effects.Volume{Base: 2, Volume: 0},
 	}
 	p.config = config
 	return p
@@ -33,64 +27,49 @@ func (p *Player) Start(id int) {
 	if id == -1 {
 		return
 	}
-	main, intro, format := p.stream(id)
+
+	stream, format := p.config.Songs[id].stream()
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
-	stream := beep.Loop(-1, main)
-	if intro != nil {
-		stream = beep.Seq(intro, stream)
-	}
-	p.main = main
-	p.intro = intro
 	go p.play(stream, format)
 }
-func (p *Player) stream(id int) (beep.StreamSeekCloser, beep.StreamSeekCloser, beep.Format) {
-	songConf := p.config.Songs[id]
-	var main beep.StreamSeekCloser = nil
-	var mainFormat beep.Format
-	var intro beep.StreamSeekCloser = nil
-	var introFormat beep.Format
-
-	if songConf.File != "" {
-		f2, _ := os.Open(songConf.File)
-		main, mainFormat, _ = vorbis.Decode(f2)
-	}
-	if songConf.IntroFile != "" {
-		f, _ := os.Open(songConf.IntroFile)
-		intro, introFormat, _ = vorbis.Decode(f)
-	}
-	if songConf.IntroFile != "" && mainFormat != introFormat {
-		panic("err formats")
-	}
-	return main, intro, mainFormat
+func (p *Player) doCallback(s beep.StreamSeekCloser, format beep.Format) {
+	now := format.SampleRate.D(s.Position()).Round(time.Second)
+	max := format.SampleRate.D(s.Len()).Round(time.Second)
+	p.callback(now.Seconds(), max.Seconds())
 }
 
-func (p *Player) play(s beep.Streamer, format beep.Format) {
+func (p *Player) play(s beep.StreamSeekCloser, format beep.Format) {
+	if p.now != nil {
+		p.now.Close()
+	}
 	p.volMaster.Streamer = s
+	p.doCallback(s, format)
+
 	speaker.Play(p.volMaster)
-	p.secondHandler(0,0)
-	p.playing = true
-	go func(playing *bool) {
-		for *playing {
+	p.now = s
+	go func() {
+		for p.now == s {
 			select {
 			case <-time.After(time.Second):
 				//speaker.Lock()
-				now := format.SampleRate.D(p.main.Position() + p.intro.Position()).Round(time.Second)
-				max := format.SampleRate.D(p.main.Len() + p.intro.Len()).Round(time.Second)
-
-				p.secondHandler(now.Seconds(), max.Seconds())
-				fmt.Println(now)
+				p.doCallback(s, format)
 				//speaker.Unlock()
 			}
 		}
-	}(&p.playing)
+	}()
 }
 func (p *Player) Suspend() {
 	speaker.Clear()
-	p.playing = false
 }
 
 func (p *Player) SetVol(v int) {
-	p.volMaster.Volume = 3.5*(float64(v)/100.0) - 3.5
+	if v == 0 {
+		p.volMaster.Silent = true
+	} else {
+		p.volMaster.Silent = false
+		p.volMaster.Volume = (float64(v)/100.0 - 1) * 10
+		fmt.Println(p.volMaster.Volume)
+	}
 }
 
 /*
