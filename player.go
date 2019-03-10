@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/speaker"
@@ -27,11 +26,11 @@ func (p *Player) Start(id int) {
 	if id == -1 {
 		return
 	}
-
 	stream, format := p.config.Songs[id].stream()
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
 	go p.play(stream, format)
 }
+
 func (p *Player) doCallback(s beep.StreamSeekCloser, format beep.Format) {
 	now := format.SampleRate.D(s.Position()).Round(time.Second)
 	max := format.SampleRate.D(s.Len()).Round(time.Second)
@@ -48,9 +47,12 @@ func (p *Player) play(s beep.StreamSeekCloser, format beep.Format) {
 	speaker.Play(p.volMaster)
 	p.now = s
 	go func() {
-		for p.now == s {
+		for {
 			select {
 			case <-time.After(time.Second):
+				if p.now != s {
+					return
+				}
 				//speaker.Lock()
 				p.doCallback(s, format)
 				//speaker.Unlock()
@@ -68,7 +70,6 @@ func (p *Player) SetVol(v int) {
 	} else {
 		p.volMaster.Silent = false
 		p.volMaster.Volume = (float64(v)/100.0 - 1) * 10
-		fmt.Println(p.volMaster.Volume)
 	}
 }
 

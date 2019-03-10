@@ -3,9 +3,11 @@ package main
 import (
 	"fmt"
 	"github.com/faiface/beep"
+	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/vorbis"
 	"github.com/lxn/walk"
 	"os"
+	"strings"
 )
 
 // static
@@ -81,6 +83,20 @@ func (s *Song) Close() error {
 	return nil
 }
 
+func readFileAsStreamer(name string) (s beep.StreamSeekCloser, format beep.Format) {
+	f, _ := os.Open(name)
+	if strings.HasSuffix(name, ".ogg") {
+		streamer, format, _ := vorbis.Decode(f)
+		return streamer, format
+	}
+	if strings.HasSuffix(name, ".mp3") {
+		streamer, format, _ := mp3.Decode(f)
+		return streamer, format
+	}
+	panic("cant decode the file")
+
+}
+
 func (s *Song) stream() (beep.StreamSeekCloser, beep.Format) {
 	songConf := s
 	var main beep.StreamSeekCloser = nil
@@ -89,12 +105,10 @@ func (s *Song) stream() (beep.StreamSeekCloser, beep.Format) {
 	var introFormat beep.Format
 
 	if songConf.File != "" {
-		f2, _ := os.Open(songConf.File)
-		main, mainFormat, _ = vorbis.Decode(f2)
+		main, mainFormat = readFileAsStreamer(songConf.File)
 	}
 	if songConf.IntroFile != "" {
-		f, _ := os.Open(songConf.IntroFile)
-		intro, introFormat, _ = vorbis.Decode(f)
+		intro, introFormat = readFileAsStreamer(songConf.IntroFile)
 	}
 	if songConf.IntroFile != "" && mainFormat != introFormat {
 		panic("err formats")
