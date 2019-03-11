@@ -43,17 +43,22 @@ func main() {
 	var nowPlaying *walk.Label
 	var combo *walk.ComboBox
 
-	player.callback = func(now float64, all float64) {
-		songName.SetText(player.config.Songs[0].Name)
+	player.callback = func(id int,now float64, all float64) {
+		songName.SetText(player.config.Songs[id].Name)
 		n := int(now)
 		m := int(all)
 		nowM, nowS := n/60, n%60
 		maxM, maxS := m/60, m%60
 		nowPlaying.SetText(fmt.Sprintf("%02d:%02d / %02d:%02d ", nowM, nowS, maxM, maxS))
 	}
+	icon, iconErr := walk.Resources.Icon("4")
+	if iconErr!=nil{
+		panic(iconErr)
+	}
 
 	_, e := MainWindow{
-		Title:  "OGG Repeat",
+		Icon:icon,
+		Title:  "BGM Repeat",
 		Size:   Size{Width: 400, Height: 100},
 		Layout: VBox{},
 		Children: []Widget{
@@ -98,7 +103,7 @@ func main() {
 					},
 					Slider{
 						AssignTo: &volumeSlide,
-						Value:    100,
+						Value:    70,
 						MaxValue: 100,
 						MinValue: 0,
 						Tracking: true,
