@@ -86,7 +86,10 @@ func (s *Song) Close() error {
 func readFileAsStreamer(name string) (s beep.StreamSeekCloser, format beep.Format) {
 	f, _ := os.Open(name)
 	if strings.HasSuffix(name, ".ogg") {
-		streamer, format, _ := vorbis.Decode(f)
+		streamer, format, e := vorbis.Decode(f)
+		if e!=nil{
+			panic(e)
+		}
 		return streamer, format
 	}
 	if strings.HasSuffix(name, ".mp3") {

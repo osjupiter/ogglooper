@@ -9,6 +9,11 @@ import (
 	"io/ioutil"
 )
 
+const (
+	width=400
+	height=191
+)
+
 func load(file string) *Config {
 	b, e := ioutil.ReadFile(file)
 	if e != nil {
@@ -43,6 +48,7 @@ func main() {
 	var nowPlaying *walk.Label
 	var combo *walk.ComboBox
 
+
 	player.callback = func(id int,now float64, all float64) {
 		songName.SetText(player.config.Songs[id].Name)
 		n := int(now)
@@ -55,11 +61,15 @@ func main() {
 	if iconErr!=nil{
 		panic(iconErr)
 	}
-
+	size:=Size{Width: width, Height: height}
+	var main *walk.MainWindow
 	_, e := MainWindow{
+		AssignTo:&main,
 		Icon:icon,
 		Title:  "BGM Repeat",
-		Size:   Size{Width: 400, Height: 100},
+		MaxSize: size,
+		MinSize:size,
+		Size:  size,
 		Layout: VBox{},
 		Children: []Widget{
 			ComboBox{
@@ -115,6 +125,13 @@ func main() {
 				},
 			},
 		},
+		OnBoundsChanged: func() {
+			main.SetSize( walk.Size{Width: width, Height: height})
+		},
+		OnSizeChanged: func() {
+			main.SetSize( walk.Size{Width: width, Height: height})
+		},
+
 	}.Run()
 	if e != nil {
 		panic(e)

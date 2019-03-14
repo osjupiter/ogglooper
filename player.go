@@ -27,6 +27,10 @@ func (p *Player) Start(id int) {
 	if id == -1 {
 		return
 	}
+	if p.now != nil {
+		p.now.Close()
+		p.now=nil
+	}
 	stream, format := p.config.Songs[id].stream()
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
 	go p.play(id,stream, format)
@@ -39,9 +43,7 @@ func (p *Player) doCallback(id int,s beep.StreamSeekCloser, format beep.Format) 
 }
 
 func (p *Player) play(id int,s beep.StreamSeekCloser, format beep.Format) {
-	if p.now != nil {
-		p.now.Close()
-	}
+
 	p.volMaster.Streamer = s
 	p.doCallback(id,s, format)
 
