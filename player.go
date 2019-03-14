@@ -10,8 +10,8 @@ import (
 type Player struct {
 	volMaster *effects.Volume
 	config    *Config
-	callback  func(int,float64, float64)
-	nowId int
+	callback  func(int, float64, float64)
+	nowId     int
 	now       beep.StreamCloser
 }
 
@@ -29,23 +29,23 @@ func (p *Player) Start(id int) {
 	}
 	if p.now != nil {
 		p.now.Close()
-		p.now=nil
+		p.now = nil
 	}
 	stream, format := p.config.Songs[id].stream()
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
-	go p.play(id,stream, format)
+	go p.play(id, stream, format)
 }
 
-func (p *Player) doCallback(id int,s beep.StreamSeekCloser, format beep.Format) {
+func (p *Player) doCallback(id int, s beep.StreamSeekCloser, format beep.Format) {
 	now := format.SampleRate.D(s.Position()).Round(time.Second)
 	max := format.SampleRate.D(s.Len()).Round(time.Second)
-	p.callback(id,now.Seconds(), max.Seconds())
+	p.callback(id, now.Seconds(), max.Seconds())
 }
 
-func (p *Player) play(id int,s beep.StreamSeekCloser, format beep.Format) {
+func (p *Player) play(id int, s beep.StreamSeekCloser, format beep.Format) {
 
 	p.volMaster.Streamer = s
-	p.doCallback(id,s, format)
+	p.doCallback(id, s, format)
 
 	speaker.Play(p.volMaster)
 	p.now = s
@@ -57,7 +57,7 @@ func (p *Player) play(id int,s beep.StreamSeekCloser, format beep.Format) {
 					return
 				}
 				speaker.Lock()
-				p.doCallback(id,s, format)
+				p.doCallback(id, s, format)
 				speaker.Unlock()
 			}
 		}

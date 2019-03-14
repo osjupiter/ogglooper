@@ -15,6 +15,10 @@ type Config struct {
 	Songs           SongList
 	DefaultLoopTime int
 }
+type PlayConf struct {
+	Volume int
+}
+
 type SongList []*Song
 
 type SongListItems struct {
@@ -87,7 +91,7 @@ func readFileAsStreamer(name string) (s beep.StreamSeekCloser, format beep.Forma
 	f, _ := os.Open(name)
 	if strings.HasSuffix(name, ".ogg") {
 		streamer, format, e := vorbis.Decode(f)
-		if e!=nil{
+		if e != nil {
 			panic(e)
 		}
 		return streamer, format

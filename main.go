@@ -6,12 +6,14 @@ import (
 	"github.com/hjson/hjson-go"
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
+	"github.com/shibukawa/configdir"
 	"io/ioutil"
 )
 
 const (
-	width=400
-	height=191
+	width         = 400
+	height        = 191
+	defaultVolume = 70
 )
 
 func load(file string) *Config {
@@ -35,6 +37,19 @@ func load(file string) *Config {
 }
 
 func main() {
+	configDirs := configdir.New("BgmRepeater", "BgmRepeater")
+	cache := configDirs.QueryCacheFolder()
+
+	firstVolume := defaultVolume
+	if cache.Exists("setting.json") {
+		var data PlayConf
+		str, _ := cache.ReadFile("setting.json")
+		if e := json.Unmarshal(str, &data); e != nil {
+			panic(e)
+		}
+		firstVolume = data.Volume
+	}
+
 	conf := load("config.hjson")
 
 	player := NewPlayer(conf)
@@ -48,8 +63,7 @@ func main() {
 	var nowPlaying *walk.Label
 	var combo *walk.ComboBox
 
-
-	player.callback = func(id int,now float64, all float64) {
+	player.callback = func(id int, now float64, all float64) {
 		songName.SetText(player.config.Songs[id].Name)
 		n := int(now)
 		m := int(all)
@@ -58,19 +72,20 @@ func main() {
 		nowPlaying.SetText(fmt.Sprintf("%02d:%02d / %02d:%02d ", nowM, nowS, maxM, maxS))
 	}
 	icon, iconErr := walk.Resources.Icon("4")
-	if iconErr!=nil{
+	if iconErr != nil {
 		panic(iconErr)
 	}
-	size:=Size{Width: width, Height: height}
+
+	size := Size{Width: width, Height: height}
 	var main *walk.MainWindow
-	_, e := MainWindow{
-		AssignTo:&main,
-		Icon:icon,
-		Title:  "BGM Repeat",
-		MaxSize: size,
-		MinSize:size,
-		Size:  size,
-		Layout: VBox{},
+	e := MainWindow{
+		AssignTo: &main,
+		Icon:     icon,
+		Title:    "BGM Repeat",
+		MaxSize:  size,
+		MinSize:  size,
+		Size:     size,
+		Layout:   VBox{},
 		Children: []Widget{
 			ComboBox{
 				AssignTo:      &combo,
@@ -113,7 +128,7 @@ func main() {
 					},
 					Slider{
 						AssignTo: &volumeSlide,
-						Value:    70,
+						Value:    firstVolume,
 						MaxValue: 100,
 						MinValue: 0,
 						Tracking: true,
@@ -126,15 +141,26 @@ func main() {
 			},
 		},
 		OnBoundsChanged: func() {
-			main.SetSize( walk.Size{Width: width, Height: height})
+			main.SetSize(walk.Size{Width: width, Height: height})
 		},
 		OnSizeChanged: func() {
-			main.SetSize( walk.Size{Width: width, Height: height})
+			main.SetSize(walk.Size{Width: width, Height: height})
 		},
+	}.Create()
 
-	}.Run()
+	main.Closing().Attach(func(canceled *bool, reason walk.CloseReason) {
+
+		data := PlayConf{Volume: volumeSlide.Value()}
+		str, _ := json.Marshal(&data)
+		if e := cache.WriteFile("setting.json", str); e != nil {
+			panic(e)
+		}
+
+	})
 	if e != nil {
 		panic(e)
 	}
+
+	main.Run()
 
 }
