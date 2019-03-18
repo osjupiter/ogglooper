@@ -5,6 +5,8 @@ GameMusicRepeater
 Game Music player for windows.
 GameMusicRepeater can be distributed with a bundled playlist.
 
+![screenshot](sc.png)
+
 
 Usage
 ===
@@ -48,5 +50,5 @@ config.hjson
 Note
 ---
 
-We use this player to distribute SoundTracks of 矢澤にこは夢を見る, is a fungame we made.
-This may be good to distribute your own game musics.
+We use this player to distribute SoundTracks of [矢澤にこは夢を見る](https://nso.booth.pm/items/1155594), is a doujin game we made.
+So this player would be good to distribute your own game musics.

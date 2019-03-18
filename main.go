@@ -37,7 +37,7 @@ func load(file string) *Config {
 }
 
 func main() {
-	configDirs := configdir.New("BgmRepeater", "BgmRepeater")
+	configDirs := configdir.New("osjuptier", "GMRepeater")
 	cache := configDirs.QueryCacheFolder()
 
 	firstVolume := defaultVolume
@@ -81,7 +81,7 @@ func main() {
 	e := MainWindow{
 		AssignTo: &main,
 		Icon:     icon,
-		Title:    "BGM Repeat",
+		Title:    "GMRepeater",
 		MaxSize:  size,
 		MinSize:  size,
 		Size:     size,
