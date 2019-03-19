@@ -2,7 +2,7 @@
 GameMusicRepeater
 ====
 
-Game Music player for windows.
+GameMusicRepeater is a Game Music player for windows.
 GameMusicRepeater can be distributed with a bundled playlist.
 
 ![screenshot](sc.png)
@@ -11,7 +11,7 @@ GameMusicRepeater can be distributed with a bundled playlist.
 Usage
 ===
 
-1. Write config.json to config list of bgm
+1. Write config.json to configure list of song units.
 
 config.hjson
 ```hjson
